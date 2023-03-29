@@ -1,20 +1,20 @@
 use std::fmt::Debug;
-use crate::{Bound, BoundChecks, Range, RangeSet, RangeVec};
+use crate::{Bound, Range, RangeSet, RangeVec};
 
 #[derive(Debug)]
-pub struct LinearRangeAdder<T: Ord> {
+pub struct LinearRangeAdder<T: Ord + Debug> {
     items: RangeVec<Range<T>>,
     last: Option<Range<T>>,
 }
 
-impl<T: Ord> Default for LinearRangeAdder<T> {
+impl<T: Ord + Debug> Default for LinearRangeAdder<T> {
     #[inline]
     fn default() -> Self {
         Self::with_capacity(4)
     }
 }
 
-impl<T: Ord> LinearRangeAdder<T> {
+impl<T: Ord + Debug> LinearRangeAdder<T> {
     #[inline]
     pub fn new() -> Self {
         Self::default()
@@ -28,16 +28,20 @@ impl<T: Ord> LinearRangeAdder<T> {
     }
 
     pub fn add(&mut self, range: Range<T>) -> bool {
+        if self.last.as_ref().map_or(false, |x| x.end == Bound::Unbounded) {
+            return true;
+        }
+
         match self.last.take() {
             None => self.last = Some(range),
             Some(mut v) => {
-                debug_assert!(v.from.is_above_lower_bound(&range.from), "range added to adder is lower than previous range");
-                if v.to.is_above_upper_bound(&range.from) {
+                debug_assert!(v.start_pos() <= range.start_pos(), "range ({:?}) added to adder is lower than previous range {:?}", range, v);
+                if v.end_pos() < range.start_pos() {
                     self.items.push(v);
                     self.last = Some(range);
                 } else {
-                    if range.to.is_below_upper_bound(&v.to) {
-                        v.to = range.to;
+                    if range.end_pos() > v.end_pos() {
+                        v.end = range.end;
                     }
 
                     self.last = Some(v);
@@ -45,7 +49,7 @@ impl<T: Ord> LinearRangeAdder<T> {
             }
         }
 
-        self.last.as_ref().map_or(false, |x| x.to == Bound::Unbounded)
+        self.last.as_ref().map_or(false, |x| x.end == Bound::Unbounded)
     }
 
     pub fn finalize(mut self) -> RangeSet<T> {
@@ -54,5 +58,30 @@ impl<T: Ord> LinearRangeAdder<T> {
         }
 
         RangeSet { items: self.items }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::internal::LinearRangeAdder;
+    use crate::{r, RangeSet};
+
+    #[test]
+    pub fn adder() {
+        let mut adder = LinearRangeAdder::new();
+        adder.add(r!(..20));
+        adder.add(r!(..4));
+        adder.add(r!(10..));
+        adder.add(r!(50..));
+        let fin = adder.finalize();
+
+        assert_eq!(RangeSet::unbound(), fin);
+
+        let mut adder = LinearRangeAdder::new();
+        adder.add(r!(..1));
+        adder.add(r!(4 >..));
+        let fin = adder.finalize();
+
+        assert_eq!(fin.items, [r!(..1), r!(4 >..)].into());
     }
 }
