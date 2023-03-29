@@ -88,3 +88,28 @@ impl<T: Ord + Debug> From<RangeFrom<T>> for Range<T> {
         Range::new(Included(value.start), Unbounded)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use smallvec::smallvec;
+    use crate::{r, Range, range_set};
+
+    #[test]
+    fn all() {
+        let r: Range<usize> = (..).into();
+        assert_eq!(r!(..), r);
+        assert_eq!(r!(1..), (1..).into());
+        assert_eq!(r!(1..4), (1..4).into());
+        assert_eq!(r!(1..=4), (1..=4).into());
+        assert_eq!(r!(..4), (..4).into());
+        assert_eq!(r!(..=4), (..=4).into());
+
+        assert_eq!(range_set![r!(4..)], vec![r!(4..)].into());
+
+        #[cfg(feature = "smallvec")]
+        {
+            let v: smallvec::SmallVec<[Range<_>; 5]> = smallvec![r!(4..)];
+            assert_eq!(range_set![r!(4..)], v.into());
+        }
+    }
+}
