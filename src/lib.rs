@@ -655,21 +655,34 @@ mod tests {
     macro_rules! actual_assert {
         ($left:expr, $right:expr, $cmp:expr) => {
             let res = $left.cmp(&$right);
-            if res != $cmp {
-                panic!("Failed to assert that {:?} <=> {:?} = {:?}", $left, $right, $cmp);
-            }
+            assert_eq!(res, $cmp, "Failed to assert that {:?} <=> {:?} = {:?}", $left, $right, $cmp)
         };
     }
 
     #[test]
     fn position_bounds() {
+        assert_cmp!(PositionalBound::Start(Included(1)), PositionalBound::End(Included(1)), Ordering::Less);
+        assert_cmp!(PositionalBound::Start(Included(2)), PositionalBound::End(Included(1)), Ordering::Greater);
         assert_cmp!(PositionalBound::Start(Included(1)), PositionalBound::End(Excluded(1)), Ordering::Equal);
         assert_cmp!(PositionalBound::Start(Excluded(1)), PositionalBound::End(Included(1)), Ordering::Greater);
         assert_cmp!(PositionalBound::Start(Excluded(0)), PositionalBound::End(Included(1)), Ordering::Less);
         assert_cmp!(PositionalBound::Start(Excluded(4)), PositionalBound::End(Excluded(1)), Ordering::Greater);
+
+        assert_cmp!(PositionalBound::Start(Included(1)), PositionalBound::Start(Included(1)), Ordering::Equal);
+        assert_cmp!(PositionalBound::Start(Included(1)), PositionalBound::Start(Included(2)), Ordering::Less);
+        assert_cmp!(PositionalBound::Start(Included(1)), PositionalBound::Start(Excluded(1)), Ordering::Less);
+        assert_cmp!(PositionalBound::Start(Included(1)), PositionalBound::Start(Excluded(2)), Ordering::Less);
+        assert_cmp!(PositionalBound::Start(Excluded(1)), PositionalBound::Start(Excluded(2)), Ordering::Less);
+        assert_cmp!(PositionalBound::Start(Excluded(1)), PositionalBound::Start(Included(2)), Ordering::Less);
+
         assert_cmp!(PositionalBound::<usize>::Start(Unbounded), PositionalBound::<usize>::Start(Unbounded), Ordering::Equal);
 
         assert_eq!(PositionalBound::<usize>::Start(Unbounded) < PositionalBound::<usize>::Start(Unbounded), false);
+
+        assert_ne!(PositionalBound::Start(Excluded(1)), 1);
+
+        assert!(PositionalBound::Start(Excluded(4)) < 5);
+        assert!(PositionalBound::End(Included(4)) < 5);
     }
 
     #[test]
@@ -680,6 +693,37 @@ mod tests {
 
         let r = range_set!(r!(0..3), r!(4..5));
         assert!(r.contains(&4));
+        // Overshoot the first, undershoot the last
+        assert!(!r.contains(&3));
+
+        assert!(!r!(0..3).contains(&3));
+        assert!(r!(0..3).contains(&0));
+    }
+
+    #[test]
+    fn add() {
+        let mut range = range_set![r!(4..8)];
+        range.add(Range::unbound());
+        assert_eq!(range, RangeSet::unbound());
+        range.add(r!(5..1234));
+        assert_eq!(range, RangeSet::unbound());
+
+        let mut range = range_set![];
+        range.add(r!(4..10));
+        assert_eq!(range_set![r!(4..10)], range);
+
+        let mut range = range_set![r!(20..54)];
+        range.add(r!(3..10));
+
+        assert_eq!(range_set![r!(3..10), r!(20..54)], range);
+
+        let mut range = range_set![r!(5..)];
+        range.add(r!(1..3));
+        assert_eq!(range_set![r!(1..3), r!(5..)], range);
+
+        let mut range = range_set![r!(5..)];
+        range.add(r!(1..));
+        assert_eq!(range_set![r!(1..)], range);
     }
 
     #[test]
