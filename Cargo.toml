@@ -16,7 +16,8 @@ serde = ["dep:serde", "smallvec/serde"]
 
 [badges.codecov]
 repository = "cijber/rangeset"
+branch = "main"
 
 [badges.github]
 repository = "cijber/rangeset"
-workflow = "rust.yml"
+workflow = "Rust"

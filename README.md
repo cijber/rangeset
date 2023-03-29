@@ -1,5 +1,5 @@
-[![Workflow Status](https://github.com/cijber/rangeset/workflows/rust%2Eyml/badge.svg)](https://github.com/cijber/rangeset/actions?query=workflow%3A%22rust%2Eyml%22)
-[![Coverage Status](https://codecov.io/gh/cijber/rangeset/branch/master/graph/badge.svg)](https://codecov.io/gh/cijber/rangeset)
+[![Workflow Status](https://github.com/cijber/rangeset/workflows/Rust/badge.svg)](https://github.com/cijber/rangeset/actions?query=workflow%3A%22Rust%22)
+[![Coverage Status](https://codecov.io/gh/cijber/rangeset/branch/main/graph/badge.svg)](https://codecov.io/gh/cijber/rangeset)
 
 # eater_rangeset
 
@@ -12,3 +12,5 @@ all other operations.
 This also reduces surface for errors, as only 2 functions have to be proven correct.
 
 This will change in the future
+
+License: MIT
