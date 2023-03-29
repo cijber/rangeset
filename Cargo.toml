@@ -13,3 +13,10 @@ serde = { version = "1", optional = true }
 default = ["smallvec"]
 smallvec = ["dep:smallvec"]
 serde = ["dep:serde", "smallvec/serde"]
+
+[badges.codecov]
+repository = "cijber/rangeset"
+
+[badges.github]
+repository = "cijber/rangeset"
+workflow = "rust.yml"
