@@ -1,7 +1,9 @@
 [package]
 name = "eater_rangeset"
+description = "Simple library to work with set's of ranges"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 
 [dependencies]
 smallvec = { version = "1", optional = true, features = ["const_new"] }
